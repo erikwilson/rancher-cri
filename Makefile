@@ -26,7 +26,13 @@ BUILD_DIR := _output
 VERSION := $(shell git rev-parse --short HEAD)
 TARBALL_PREFIX := cri-containerd
 TARBALL := $(TARBALL_PREFIX)-$(VERSION).$(GOOS)-$(GOARCH).tar.gz
-BUILD_TAGS := seccomp apparmor
+ifneq ($(GOOS),windows)
+	BUILDTAGS := seccomp apparmor
+	ifeq ($(shell pkg-config --exists libselinux; echo $$?),0)
+		BUILDTAGS += selinux
+	endif
+endif
+export BUILDTAGS
 # Add `-TEST` suffix to indicate that all binaries built from this repo are for test.
 GO_LDFLAGS := -X $(PROJECT)/vendor/github.com/containerd/containerd/version.Version=$(VERSION)-TEST
 SOURCES := $(shell find cmd/ pkg/ vendor/ -name '*.go')
@@ -75,7 +81,7 @@ update-vendor: sync-vendor sort-vendor ## Syncs containerd/vendor.conf -> vendor
 $(BUILD_DIR)/containerd: $(SOURCES) $(PLUGIN_SOURCES)
 	@echo "$(WHALE) $@"
 	$(GO) build -o $@ \
-		-tags '$(BUILD_TAGS)' \
+		-tags '$(BUILDTAGS)' \
 		-ldflags '$(GO_LDFLAGS)' \
 		-gcflags '$(GO_GCFLAGS)' \
 		$(PROJECT)/cmd/containerd
@@ -83,7 +89,7 @@ $(BUILD_DIR)/containerd: $(SOURCES) $(PLUGIN_SOURCES)
 test: ## unit test
 	@echo "$(WHALE) $@"
 	$(GO) test -timeout=10m -race ./pkg/... \
-		-tags '$(BUILD_TAGS)' \
+		-tags '$(BUILDTAGS)' \
 	        -ldflags '$(GO_LDFLAGS)' \
 		-gcflags '$(GO_GCFLAGS)'
 
@@ -144,7 +150,7 @@ proto: ## update protobuf of the cri plugin api
 
 .PHONY: install.deps
 
-install.deps: ## install dependencies of cri (default 'seccomp apparmor' BUILDTAGS for runc build)
+install.deps: ## install dependencies of cri
 	@echo "$(WHALE) $@"
 	@./hack/install/install-deps.sh
 

@@ -103,10 +103,10 @@ sudo make install
 testing purposes. The version tag carries the suffix "-TEST".*
 #### Build Tags
 `cri` supports optional build tags for compiling support of various features.
-To add build tags to the make option the `BUILD_TAGS` variable must be set.
+To add build tags to the make option the `BUILDTAGS` variable must be set.
 
 ```bash
-make BUILD_TAGS='seccomp apparmor'
+make BUILDTAGS='seccomp apparmor'
 ```
 
 | Build Tag | Feature                            | Dependency                      |
