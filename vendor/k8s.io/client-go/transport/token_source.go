@@ -26,7 +26,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // TokenSourceWrapTransport returns a WrapTransport that injects bearer tokens
@@ -72,6 +72,10 @@ func NewCachedTokenSource(ts oauth2.TokenSource) oauth2.TokenSource {
 type tokenSourceTransport struct {
 	base http.RoundTripper
 	ort  http.RoundTripper
+}
+
+func (tst *tokenSourceTransport) WrappedRoundTripper() http.RoundTripper {
+	return tst.base
 }
 
 func (tst *tokenSourceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
